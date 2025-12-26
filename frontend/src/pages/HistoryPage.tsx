@@ -82,17 +82,14 @@ export function HistoryPage({ onClose, onUpdated }: HistoryPageProps) {
   ];
 
   return (
-    <div
-      className="fixed inset-0 bg-gradient-to-br from-sky-50 to-blue-100 z-50 overflow-y-auto"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      {/* Sticky header */}
-      <div className="sticky top-0 bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg z-10">
+    <div className="fixed inset-0 bg-gradient-to-br from-sky-50 to-blue-100 z-50 flex flex-col">
+      {/* Safe area top background */}
+      <div
+        className="bg-gradient-to-r from-sky-600 to-blue-600 flex-shrink-0"
+        style={{ height: 'env(safe-area-inset-top)' }}
+      />
+      {/* Fixed header */}
+      <div className="flex-shrink-0 bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg z-10">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             type="button"
@@ -104,14 +101,21 @@ export function HistoryPage({ onClose, onUpdated }: HistoryPageProps) {
             </svg>
             Back
           </button>
-          <div className="text-center">
-            <h1 className="text-lg font-semibold">History</h1>
-          </div>
+          <h1 className="text-lg font-semibold">History</h1>
           <div className="w-16"></div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      {/* Scrollable content */}
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
+        <div className="max-w-3xl mx-auto px-4 py-6">
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
@@ -163,6 +167,7 @@ export function HistoryPage({ onClose, onUpdated }: HistoryPageProps) {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

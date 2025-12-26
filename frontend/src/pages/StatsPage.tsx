@@ -7,17 +7,14 @@ interface StatsPageProps {
 
 export function StatsPage({ stats, onClose }: StatsPageProps) {
   return (
-    <div
-      className="fixed inset-0 bg-gradient-to-br from-sky-50 to-blue-100 z-50 overflow-y-auto"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      {/* Sticky header */}
-      <div className="sticky top-0 bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg z-10">
+    <div className="fixed inset-0 bg-gradient-to-br from-sky-50 to-blue-100 z-50 flex flex-col">
+      {/* Safe area top background */}
+      <div
+        className="bg-gradient-to-r from-sky-600 to-blue-600 flex-shrink-0"
+        style={{ height: 'env(safe-area-inset-top)' }}
+      />
+      {/* Fixed header */}
+      <div className="flex-shrink-0 bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
             type="button"
@@ -34,7 +31,16 @@ export function StatsPage({ stats, onClose }: StatsPageProps) {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      {/* Scrollable content */}
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
+        <div className="max-w-2xl mx-auto px-4 py-6">
 
         {/* Raw Food Stats */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-4">
@@ -103,6 +109,7 @@ export function StatsPage({ stats, onClose }: StatsPageProps) {
               <div className="text-2xl sm:text-3xl font-bold text-emerald-700">{stats.breastMilk.consumedMl} ml</div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
