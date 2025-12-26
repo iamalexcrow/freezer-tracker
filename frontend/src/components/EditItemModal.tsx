@@ -75,7 +75,7 @@ function EditRawFoodForm({
       errors.name = true;
     }
     const parsedAmount = parseFloat(amount);
-    if (!amount.trim() || isNaN(parsedAmount) || parsedAmount < 0.1) {
+    if (!amount.trim() || isNaN(parsedAmount) || parsedAmount <= 0) {
       errors.amount = true;
     }
 
@@ -156,8 +156,8 @@ function EditRawFoodForm({
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            step="0.1"
-            min="0.1"
+            step="any"
+            min="0.001"
             className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.amount ? "border-red-500" : "border-gray-200"}`}
           />
         </div>

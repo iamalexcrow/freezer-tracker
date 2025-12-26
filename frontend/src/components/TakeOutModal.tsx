@@ -16,7 +16,7 @@ export function TakeOutModal({ item, onConfirm, onClose }: TakeOutModalProps) {
   const isFullAmount = parsedAmount >= item.amount;
 
   const handleConfirm = () => {
-    if (!amount.trim() || isNaN(parsedAmount) || parsedAmount < 0.1 || parsedAmount > item.amount) {
+    if (!amount.trim() || isNaN(parsedAmount) || parsedAmount <= 0 || parsedAmount > item.amount) {
       setFieldError(true);
       setError("Please enter a valid amount");
       return;
@@ -67,8 +67,8 @@ export function TakeOutModal({ item, onConfirm, onClose }: TakeOutModalProps) {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                step={item.measuring_unit === "kg" ? "0.1" : "1"}
-                min="0.1"
+                step="any"
+                min="0.001"
                 max={item.amount}
                 className={`flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 border rounded-xl text-center text-base sm:text-lg font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldError ? "border-red-500" : "border-gray-200"}`}
               />
