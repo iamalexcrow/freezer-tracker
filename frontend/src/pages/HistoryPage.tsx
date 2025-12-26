@@ -82,22 +82,36 @@ export function HistoryPage({ onClose, onUpdated }: HistoryPageProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-sky-50 to-blue-100 z-50 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">History</h1>
-            <p className="text-gray-500 text-sm">Items taken out of the freezer</p>
-          </div>
+    <div
+      className="fixed inset-0 bg-gradient-to-br from-sky-50 to-blue-100 z-50 overflow-y-auto"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
+    >
+      {/* Sticky header */}
+      <div className="sticky top-0 bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-lg z-10">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <button
-            onClick={onClose}
-            className="p-2 hover:bg-white rounded-xl transition-colors"
+            type="button"
+            onClick={() => onClose()}
+            className="flex items-center gap-2 text-white font-medium p-2 -ml-2 hover:bg-white/20 rounded-xl transition-colors active:bg-white/30"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
+            Back
           </button>
+          <div className="text-center">
+            <h1 className="text-lg font-semibold">History</h1>
+          </div>
+          <div className="w-16"></div>
         </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 py-6">
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4">
