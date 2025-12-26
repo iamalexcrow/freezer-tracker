@@ -9,16 +9,49 @@ interface SettingsPageProps {
 }
 
 export function SettingsPage({ settings, onClose, onUpdated }: SettingsPageProps) {
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState(
+    settings.map(s => ({
+      ...s,
+      fresh_days_str: String(s.fresh_days),
+      good_days_str: String(s.good_days),
+      use_soon_days_str: String(s.use_soon_days),
+    }))
+  );
   const [saving, setSaving] = useState<number | null>(null);
+  const [errors, setErrors] = useState<Record<number, { fresh?: boolean; good?: boolean; useSoon?: boolean }>>({});
 
-  const handleUpdate = async (setting: FreshnessSetting) => {
-    setSaving(setting.id);
+  const handleUpdate = async (settingId: number) => {
+    const setting = localSettings.find(s => s.id === settingId);
+    if (!setting) return;
+
+    const freshDays = parseInt(setting.fresh_days_str);
+    const goodDays = parseInt(setting.good_days_str);
+    const useSoonDays = parseInt(setting.use_soon_days_str);
+
+    const fieldErrors: { fresh?: boolean; good?: boolean; useSoon?: boolean } = {};
+    if (!setting.fresh_days_str.trim() || isNaN(freshDays) || freshDays < 0) {
+      fieldErrors.fresh = true;
+    }
+    if (!setting.good_days_str.trim() || isNaN(goodDays) || goodDays < 0) {
+      fieldErrors.good = true;
+    }
+    if (!setting.use_soon_days_str.trim() || isNaN(useSoonDays) || useSoonDays < 0) {
+      fieldErrors.useSoon = true;
+    }
+
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(prev => ({ ...prev, [settingId]: fieldErrors }));
+      return;
+    }
+
+    setErrors(prev => ({ ...prev, [settingId]: {} }));
+
+    setSaving(settingId);
     try {
-      await api.updateFreshnessSetting(setting.id, {
-        fresh_days: setting.fresh_days,
-        good_days: setting.good_days,
-        use_soon_days: setting.use_soon_days,
+      await api.updateFreshnessSetting(settingId, {
+        fresh_days: freshDays,
+        good_days: goodDays,
+        use_soon_days: useSoonDays,
       });
       onUpdated();
     } catch (e) {
@@ -28,7 +61,7 @@ export function SettingsPage({ settings, onClose, onUpdated }: SettingsPageProps
     }
   };
 
-  const updateLocal = (id: number, field: keyof FreshnessSetting, value: number) => {
+  const updateLocal = (id: number, field: string, value: string) => {
     setLocalSettings((prev) =>
       prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
     );
@@ -116,8 +149,9 @@ export function SettingsPage({ settings, onClose, onUpdated }: SettingsPageProps
                 icon={getCategoryIcon(setting)}
                 label={setting.sub_category || ""}
                 saving={saving === setting.id}
+                errors={errors[setting.id] || {}}
                 onUpdate={updateLocal}
-                onSave={() => handleUpdate(localSettings.find((s) => s.id === setting.id)!)}
+                onSave={() => handleUpdate(setting.id)}
               />
             ))}
           </div>
@@ -134,8 +168,9 @@ export function SettingsPage({ settings, onClose, onUpdated }: SettingsPageProps
                 icon={getCategoryIcon(setting)}
                 label={getCategoryLabel(setting)}
                 saving={saving === setting.id}
+                errors={errors[setting.id] || {}}
                 onUpdate={updateLocal}
-                onSave={() => handleUpdate(localSettings.find((s) => s.id === setting.id)!)}
+                onSave={() => handleUpdate(setting.id)}
               />
             ))}
           </div>
@@ -146,48 +181,49 @@ export function SettingsPage({ settings, onClose, onUpdated }: SettingsPageProps
 }
 
 interface SettingRowProps {
-  setting: FreshnessSetting;
+  setting: FreshnessSetting & { fresh_days_str: string; good_days_str: string; use_soon_days_str: string };
   icon: string;
   label: string;
   saving: boolean;
-  onUpdate: (id: number, field: keyof FreshnessSetting, value: number) => void;
+  errors: { fresh?: boolean; good?: boolean; useSoon?: boolean };
+  onUpdate: (id: number, field: string, value: string) => void;
   onSave: () => void;
 }
 
-function SettingRow({ setting, icon, label, saving, onUpdate, onSave }: SettingRowProps) {
+function SettingRow({ setting, icon, label, saving, errors, onUpdate, onSave }: SettingRowProps) {
   return (
     <div className="border border-gray-100 rounded-xl p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg sm:text-xl">{icon}</span>
         <span className="font-medium text-gray-800 text-sm sm:text-base">{label}</span>
       </div>
-      
+
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <div>
           <label className="block text-xs text-emerald-600 mb-1">Fresh</label>
           <input
             type="number"
-            value={setting.fresh_days}
-            onChange={(e) => onUpdate(setting.id, "fresh_days", parseInt(e.target.value) || 0)}
-            className="w-full px-2 sm:px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            value={setting.fresh_days_str}
+            onChange={(e) => onUpdate(setting.id, "fresh_days_str", e.target.value)}
+            className={`w-full px-2 sm:px-3 py-2 bg-emerald-50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.fresh ? "border-red-500" : "border-emerald-200"}`}
           />
         </div>
         <div>
           <label className="block text-xs text-amber-600 mb-1">Good</label>
           <input
             type="number"
-            value={setting.good_days}
-            onChange={(e) => onUpdate(setting.id, "good_days", parseInt(e.target.value) || 0)}
-            className="w-full px-2 sm:px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            value={setting.good_days_str}
+            onChange={(e) => onUpdate(setting.id, "good_days_str", e.target.value)}
+            className={`w-full px-2 sm:px-3 py-2 bg-amber-50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${errors.good ? "border-red-500" : "border-amber-200"}`}
           />
         </div>
         <div>
           <label className="block text-xs text-orange-600 mb-1">Use Soon</label>
           <input
             type="number"
-            value={setting.use_soon_days}
-            onChange={(e) => onUpdate(setting.id, "use_soon_days", parseInt(e.target.value) || 0)}
-            className="w-full px-2 sm:px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            value={setting.use_soon_days_str}
+            onChange={(e) => onUpdate(setting.id, "use_soon_days_str", e.target.value)}
+            className={`w-full px-2 sm:px-3 py-2 bg-orange-50 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.useSoon ? "border-red-500" : "border-orange-200"}`}
           />
         </div>
       </div>

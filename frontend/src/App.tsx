@@ -20,6 +20,7 @@ import { CategoryTabs } from "./components/CategoryTabs";
 import { Toolbar } from "./components/Toolbar";
 import { RedZoneAlert } from "./components/RedZoneAlert";
 import { ItemCard } from "./components/ItemCard";
+import { ListView } from "./components/ListView";
 import { AddItemModal } from "./components/AddItemModal";
 import { EditItemModal } from "./components/EditItemModal";
 import { TakeOutModal } from "./components/TakeOutModal";
@@ -287,6 +288,18 @@ export default function App() {
     if (items.length === 0) {
       return (
         <div className="text-center text-gray-500 py-8">No items found</div>
+      );
+    }
+
+    if (viewMode === "list") {
+      return (
+        <ListView
+          items={items}
+          getItemFreshness={getItemFreshness}
+          onTakeOut={handleTakeOut}
+          onEdit={setEditItem}
+          onDelete={handleDelete}
+        />
       );
     }
 

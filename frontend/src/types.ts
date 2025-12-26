@@ -1,6 +1,6 @@
 // Categories
 export type Category = "all" | "raw" | "prepared" | "milk";
-export type ViewMode = "grid" | "rows";
+export type ViewMode = "grid" | "rows" | "list";
 export type SortOrder = "newest" | "oldest";
 export type FreshnessFilter = "all" | "fresh" | "good" | "use_soon" | "red";
 

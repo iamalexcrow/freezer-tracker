@@ -55,12 +55,13 @@ function EditRawFoodForm({
   const [subCategory, setSubCategory] = useState<RawFoodSubCategory>(item.sub_category);
   const [name, setName] = useState(item.name);
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
-  const [amount, setAmount] = useState(item.amount);
+  const [amount, setAmount] = useState(String(item.amount));
   const [measuringUnit, setMeasuringUnit] = useState<"kg" | "pieces">(item.measuring_unit);
   const [dateAdded, setDateAdded] = useState(item.date_added.split("T")[0]);
   const [comment, setComment] = useState(item.comment || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; amount?: boolean }>({});
 
   useEffect(() => {
     api.getRawFoodNames(subCategory).then(setNameSuggestions).catch(console.error);
@@ -68,17 +69,30 @@ function EditRawFoodForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: { name?: boolean; amount?: boolean } = {};
+
     if (!name.trim()) {
-      setError("Name is required");
+      errors.name = true;
+    }
+    const parsedAmount = parseFloat(amount);
+    if (!amount.trim() || isNaN(parsedAmount) || parsedAmount < 0.1) {
+      errors.amount = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
       return;
     }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
       await api.updateRawFood(item.id, {
         sub_category: subCategory,
         name: name.trim(),
-        amount,
+        amount: parsedAmount,
         measuring_unit: measuringUnit,
         date_added: dateAdded,
         comment: comment.trim() || undefined,
@@ -126,7 +140,7 @@ function EditRawFoodForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Chicken Breast"
           list="name-suggestions-edit"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.name ? "border-red-500" : "border-gray-200"}`}
         />
         <datalist id="name-suggestions-edit">
           {nameSuggestions.map((n) => (
@@ -141,10 +155,10 @@ function EditRawFoodForm({
           <input
             type="number"
             value={amount}
-            onChange={(e) => setAmount(Math.max(0.1, parseFloat(e.target.value) || 0))}
+            onChange={(e) => setAmount(e.target.value)}
             step="0.1"
             min="0.1"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.amount ? "border-red-500" : "border-gray-200"}`}
           />
         </div>
         <div>
@@ -231,11 +245,12 @@ function EditPreparedMealForm({
 }) {
   const [name, setName] = useState(item.name);
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
-  const [portions, setPortions] = useState(item.portions);
+  const [portions, setPortions] = useState(String(item.portions));
   const [dateAdded, setDateAdded] = useState(item.date_added.split("T")[0]);
   const [comment, setComment] = useState(item.comment || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; portions?: boolean }>({});
 
   useEffect(() => {
     api.getPreparedMealNames().then(setNameSuggestions).catch(console.error);
@@ -243,16 +258,29 @@ function EditPreparedMealForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: { name?: boolean; portions?: boolean } = {};
+
     if (!name.trim()) {
-      setError("Name is required");
+      errors.name = true;
+    }
+    const parsedPortions = parseInt(portions);
+    if (!portions.trim() || isNaN(parsedPortions) || parsedPortions < 1) {
+      errors.portions = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
       return;
     }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
       await api.updatePreparedMeal(item.id, {
         name: name.trim(),
-        portions,
+        portions: parsedPortions,
         date_added: dateAdded,
         comment: comment.trim() || undefined,
       });
@@ -279,7 +307,7 @@ function EditPreparedMealForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Lasagna"
           list="meal-suggestions-edit"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.name ? "border-red-500" : "border-gray-200"}`}
         />
         <datalist id="meal-suggestions-edit">
           {nameSuggestions.map((n) => (
@@ -293,9 +321,9 @@ function EditPreparedMealForm({
         <input
           type="number"
           value={portions}
-          onChange={(e) => setPortions(Math.max(1, parseInt(e.target.value) || 1))}
+          onChange={(e) => setPortions(e.target.value)}
           min="1"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.portions ? "border-red-500" : "border-gray-200"}`}
         />
       </div>
 
@@ -354,20 +382,35 @@ function EditBreastMilkForm({
 }) {
   const [dateExpressed, setDateExpressed] = useState(item.date_expressed.split("T")[0]);
   const [dateAdded, setDateAdded] = useState(item.date_added.split("T")[0]);
-  const [volumeMl, setVolumeMl] = useState(item.volume_ml);
+  const [volumeMl, setVolumeMl] = useState(String(item.volume_ml));
   const [comment, setComment] = useState(item.comment || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ volumeMl?: boolean }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: { volumeMl?: boolean } = {};
+
+    const parsedVolume = parseInt(volumeMl);
+    if (!volumeMl.trim() || isNaN(parsedVolume) || parsedVolume < 1) {
+      errors.volumeMl = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
+      return;
+    }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
       await api.updateBreastMilk(item.id, {
         date_expressed: dateExpressed,
         date_added: dateAdded,
-        volume_ml: volumeMl,
+        volume_ml: parsedVolume,
         comment: comment.trim() || undefined,
       });
       onSaved();
@@ -390,9 +433,9 @@ function EditBreastMilkForm({
         <input
           type="number"
           value={volumeMl}
-          onChange={(e) => setVolumeMl(Math.max(1, parseInt(e.target.value) || 0))}
+          onChange={(e) => setVolumeMl(e.target.value)}
           min="1"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.volumeMl ? "border-red-500" : "border-gray-200"}`}
         />
       </div>
 

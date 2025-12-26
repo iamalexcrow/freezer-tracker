@@ -64,12 +64,13 @@ function RawFoodForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
   const [subCategory, setSubCategory] = useState<RawFoodSubCategory>("Poultry");
   const [name, setName] = useState("");
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
-  const [amount, setAmount] = useState(1);
+  const [amount, setAmount] = useState("1");
   const [measuringUnit, setMeasuringUnit] = useState<"kg" | "pieces">("kg");
   const [dateAdded, setDateAdded] = useState(getTodayString());
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; amount?: boolean }>({});
 
   useEffect(() => {
     api.getRawFoodNames(subCategory).then(setNameSuggestions).catch(console.error);
@@ -77,17 +78,30 @@ function RawFoodForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: { name?: boolean; amount?: boolean } = {};
+
     if (!name.trim()) {
-      setError("Name is required");
+      errors.name = true;
+    }
+    const parsedAmount = parseFloat(amount);
+    if (!amount.trim() || isNaN(parsedAmount) || parsedAmount < 0.1) {
+      errors.amount = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
       return;
     }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
       await api.createRawFood({
         sub_category: subCategory,
         name: name.trim(),
-        amount,
+        amount: parsedAmount,
         measuring_unit: measuringUnit,
         date_added: dateAdded,
         comment: comment.trim() || undefined,
@@ -135,7 +149,7 @@ function RawFoodForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Chicken Breast"
           list="name-suggestions"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.name ? "border-red-500" : "border-gray-200"}`}
         />
         <datalist id="name-suggestions">
           {nameSuggestions.map((n) => (
@@ -150,10 +164,10 @@ function RawFoodForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
           <input
             type="number"
             value={amount}
-            onChange={(e) => setAmount(Math.max(0.1, parseFloat(e.target.value) || 0))}
+            onChange={(e) => setAmount(e.target.value)}
             step="0.1"
             min="0.1"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.amount ? "border-red-500" : "border-gray-200"}`}
           />
         </div>
         <div>
@@ -232,12 +246,13 @@ function RawFoodForm({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
 function PreparedMealForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState("");
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
-  const [portions, setPortions] = useState(1);
-  const [quantity, setQuantity] = useState(1);
+  const [portions, setPortions] = useState("1");
+  const [quantity, setQuantity] = useState("1");
   const [dateAdded, setDateAdded] = useState(getTodayString());
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ name?: boolean; portions?: boolean; quantity?: boolean }>({});
 
   useEffect(() => {
     api.getPreparedMealNames().then(setNameSuggestions).catch(console.error);
@@ -245,19 +260,36 @@ function PreparedMealForm({ onClose, onSaved }: { onClose: () => void; onSaved: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: { name?: boolean; portions?: boolean; quantity?: boolean } = {};
+
     if (!name.trim()) {
-      setError("Name is required");
+      errors.name = true;
+    }
+    const parsedPortions = parseInt(portions);
+    if (!portions.trim() || isNaN(parsedPortions) || parsedPortions < 1) {
+      errors.portions = true;
+    }
+    const parsedQuantity = parseInt(quantity);
+    if (!quantity.trim() || isNaN(parsedQuantity) || parsedQuantity < 1) {
+      errors.quantity = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
       return;
     }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
       await api.createPreparedMeal({
         name: name.trim(),
-        portions,
+        portions: parsedPortions,
         date_added: dateAdded,
         comment: comment.trim() || undefined,
-        quantity,
+        quantity: parsedQuantity,
       });
       onSaved();
     } catch (e) {
@@ -282,7 +314,7 @@ function PreparedMealForm({ onClose, onSaved }: { onClose: () => void; onSaved: 
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Lasagna"
           list="meal-suggestions"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.name ? "border-red-500" : "border-gray-200"}`}
         />
         <datalist id="meal-suggestions">
           {nameSuggestions.map((n) => (
@@ -297,9 +329,9 @@ function PreparedMealForm({ onClose, onSaved }: { onClose: () => void; onSaved: 
           <input
             type="number"
             value={portions}
-            onChange={(e) => setPortions(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={(e) => setPortions(e.target.value)}
             min="1"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.portions ? "border-red-500" : "border-gray-200"}`}
           />
         </div>
         <div>
@@ -307,16 +339,16 @@ function PreparedMealForm({ onClose, onSaved }: { onClose: () => void; onSaved: 
           <input
             type="number"
             value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            onChange={(e) => setQuantity(e.target.value)}
             min="1"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.quantity ? "border-red-500" : "border-gray-200"}`}
           />
         </div>
       </div>
 
-      {quantity > 1 && (
+      {parseInt(quantity) > 1 && (
         <div className="bg-sky-50 text-sky-700 px-4 py-2 rounded-xl text-sm">
-          This will create {quantity} separate entries, each with {portions} portion{portions > 1 ? "s" : ""}.
+          This will create {quantity} separate entries, each with {portions} portion{parseInt(portions) > 1 ? "s" : ""}.
         </div>
       )}
 
@@ -367,20 +399,35 @@ function PreparedMealForm({ onClose, onSaved }: { onClose: () => void; onSaved: 
 function BreastMilkForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [dateExpressed, setDateExpressed] = useState(getTodayString());
   const [dateAdded, setDateAdded] = useState(getTodayString());
-  const [volumeMl, setVolumeMl] = useState(100);
+  const [volumeMl, setVolumeMl] = useState("100");
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ volumeMl?: boolean }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: { volumeMl?: boolean } = {};
+
+    const parsedVolume = parseInt(volumeMl);
+    if (!volumeMl.trim() || isNaN(parsedVolume) || parsedVolume < 1) {
+      errors.volumeMl = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Please fix the highlighted fields");
+      return;
+    }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
       await api.createBreastMilk({
         date_expressed: dateExpressed,
         date_added: dateAdded,
-        volume_ml: volumeMl,
+        volume_ml: parsedVolume,
         comment: comment.trim() || undefined,
       });
       onSaved();
@@ -403,9 +450,9 @@ function BreastMilkForm({ onClose, onSaved }: { onClose: () => void; onSaved: ()
         <input
           type="number"
           value={volumeMl}
-          onChange={(e) => setVolumeMl(Math.max(1, parseInt(e.target.value) || 0))}
+          onChange={(e) => setVolumeMl(e.target.value)}
           min="1"
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 ${fieldErrors.volumeMl ? "border-red-500" : "border-gray-200"}`}
         />
       </div>
 
